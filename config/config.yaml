@@ -1,0 +1,17 @@
+# Proxy Settings
+API_URL: https://api.proxy-cheap.com/proxies
+API_KEY: 784c886e-e065-4eb4-bdbe-0db6ee8219c9
+API_SECRET: 0c9923ce-2591-4950-a44b-13bc8ec52513
+
+# Scraper Settings
+scraper:
+  request_timeout: 30
+  max_retries: 3
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  delay_between_requests: 2.0
+
+# Storage Settings
+storage:
+  output_format: csv
+  output_directory: data
+  filename_prefix: jobs_
