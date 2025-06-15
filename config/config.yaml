@@ -1,7 +1,15 @@
 # Proxy Settings
-API_URL: https://api.proxy-cheap.com/proxies
-API_KEY: 784c886e-e065-4eb4-bdbe-0db6ee8219c9
-API_SECRET: 0c9923ce-2591-4950-a44b-13bc8ec52513
+residential_proxy:
+  url: https://api.proxy-cheap.com/proxies
+  api_key: 784c886e-e065-4eb4-bdbe-0db6ee8219c9
+  api_secret: 0c9923ce-2591-4950-a44b-13bc8ec52513
+
+mobile_proxy:
+  username: pcn3qh8GAJ
+  password: PC_7yAZJMBlpOdXJC8by
+  port: 5959
+  host: proxy-us.proxy-cheap.com
+  url: https://httpbin.org/ip
 
 # Scraper Settings
 scraper:
@@ -15,3 +23,6 @@ storage:
   output_format: csv
   output_directory: data
   filename_prefix: jobs_
+
+indeed:
+  api_key: 161092c2017b5bbab13edb12461a62d5a833871e7cad6d9d475304573de67ac8

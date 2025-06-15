@@ -1,73 +1,106 @@
 """GraphQL queries for Indeed API"""
 
-JOB_SEARCH = """
-query GetJobData(
-    $what: String!
-    $location: String!
-    $cursor: String
-    $filters: JobSearchFiltersInput
-) {
-    jobSearch(
-        what: $what
-        location: $location
+INDEED_JOB_SEARCH = """
+    query GetJobData {{
+        jobSearch(
+        {what}
+        {location}
         limit: 100
-        cursor: $cursor
+        {cursor}
         sort: RELEVANCE
-        filters: $filters
-    ) {
-        pageInfo {
+        {filters}
+        ) {{
+        pageInfo {{
             nextCursor
-        }
-        results {
-            job {
-                title
-                datePublished
-                description {
-                    html
-                }
-                location {
-                    formatted {
-                        short
-                    }
-                }
-                compensation {
-                    estimated {
-                        baseSalary {
-                            range {
-                                ... on Range {
-                                    min
-                                    max
-                                }
-                            }
-                        }
-                    }
-                }
-                attributes {
-                    key
-                    label
-                }
-                employer {
-                    name
-                    dossier {
-                        employerDetails {
-                            addresses
-                        }
-                        links {
-                            corporateWebsite
-                        }
-                    }
-                }
-                recruit {
-                    viewJobUrl
-                }
-            }
-        }
-    }
-}
-"""
+        }}
+        results {{
+            trackingKey
+            job {{
+            source {{
+                name
+            }}
+            key
+            title
+            datePublished
+            dateOnIndeed
+            description {{
+                html
+            }}
+            location {{
+                countryName
+                countryCode
+                admin1Code
+                city
+                postalCode
+                streetAddress
+                formatted {{
+                short
+                long
+                }}
+            }}
+            compensation {{
+                estimated {{
+                currencyCode
+                baseSalary {{
+                    unitOfWork
+                    range {{
+                    ... on Range {{
+                        min
+                        max
+                    }}
+                    }}
+                }}
+                }}
+                baseSalary {{
+                unitOfWork
+                range {{
+                    ... on Range {{
+                    min
+                    max
+                    }}
+                }}
+                }}
+                currencyCode
+            }}
+            attributes {{
+                key
+                label
+            }}
+            employer {{
+                relativeCompanyPageUrl
+                name
+                dossier {{
+                    employerDetails {{
+                    addresses
+                    industry
+                    employeesLocalizedLabel
+                    revenueLocalizedLabel
+                    briefDescription
+                    ceoName
+                    ceoPhotoUrl
+                    }}
+                    images {{
+                        headerImageUrl
+                        squareLogoUrl
+                    }}
+                    links {{
+                    corporateWebsite
+                }}
+                }}
+            }}
+            recruit {{
+                viewJobUrl
+                detailedSalary
+                workSchedule
+            }}
+            }}
+        }}
+        }}
+    }}
+    """
 
 # API Headers
-API_HEADERS = {
+INDEED_API_HEADERS = {
     "Host": "apis.indeed.com",
     "content-type": "application/json",
     "indeed-api-key": "161092c2017b5bbab13edb12461a62d5a833871e7cad6d9d475304573de67ac8",
@@ -79,5 +112,5 @@ API_HEADERS = {
 }
 
 # Common attribute keys for job types and remote status
-JOB_TYPE_KEYS = ["employment_type", "job_type"]
-REMOTE_KEYS = ["remote", "work_from_home"] 
+INDEED_JOB_TYPE_KEYS = ["employment_type", "job_type"]
+INDEED_REMOTE_KEYS = ["remote", "work_from_home"] 

@@ -44,12 +44,18 @@ class Proxy:
 class ProxyManager:
     """Manages a pool of residential proxies with rotation capability."""
     
-    def __init__(self) -> None:
+    def __init__(self, residential: bool = True) -> None:
         """Initialize the proxy manager and fetch available proxies."""
-        self.proxies: List[Proxy] = self._fetch_residential_proxies()
-        if not self.proxies:
-            raise Exception("No residential proxies found!")
-        self.proxy_pool = cycle(self.proxies)
+        self.residential = residential
+
+        self.residential_proxies: List[Proxy] = self._fetch_residential_proxies()
+        self.mobile_proxy: Proxy = self._fetch_mobile_proxy()
+
+        if not self.residential_proxies and not self.mobile_proxy:
+            raise Exception("No residential or mobile proxies found!")
+        
+        if self.residential:
+            self.proxy_pool = cycle(self.residential_proxies)  
 
     def _fetch_residential_proxies(self) -> List[Proxy]:
         """
@@ -60,12 +66,12 @@ class ProxyManager:
         """
         headers = {
             "Accept": "application/json",
-            "X-Api-Key": settings.proxy.api_key,
-            "X-Api-Secret": settings.proxy.api_secret
+            "X-Api-Key": settings.residential_proxy.api_key,
+            "X-Api-Secret": settings.residential_proxy.api_secret
         }
         
         response = requests.get(
-            settings.proxy.api_url,
+            settings.residential_proxy.url,
             headers=headers,
             timeout=settings.scraper.request_timeout
         )
@@ -87,6 +93,42 @@ class ProxyManager:
             )
             for proxy in residential
         ]
+    
+    def _fetch_mobile_proxy(self) -> Proxy:
+        """Fetch a mobile proxy from the API."""
+        
+        mobile_request_proxy = f"http://{settings.mobile_proxy.username}:{settings.mobile_proxy.password}@{settings.mobile_proxy.host}:{settings.mobile_proxy.port}"
+        mobile_request_proxies = {
+            "http": mobile_request_proxy,
+            "https": mobile_request_proxy,
+        }
+
+        try: # TODO: figure out why the mobile proxy ip request is timing out
+            response = requests.get(
+                settings.mobile_proxy.url,
+                proxies=mobile_request_proxies,
+                timeout=settings.scraper.request_timeout
+            )
+            response.raise_for_status()
+            data = response.json()["origin"]
+            print("Mobile proxy fetched: ", data)
+            return Proxy(
+                ip=data,
+                port=settings.mobile_proxy.port,
+                username=settings.mobile_proxy.username,
+                password=settings.mobile_proxy.password
+            )
+        except TimeoutError:
+            print(f"Error fetching mobile proxy: {e}")
+            return None
+        except Exception as e:
+            print(f"Error fetching mobile proxy: {e}")
+            return None
+
+    
+    def switch_proxy(self) -> None:
+        """Switch to the next proxy in the pool."""
+        self.residential = not self.residential
 
     def get_next_proxy(self) -> Dict[str, str]:
         """
@@ -95,8 +137,12 @@ class ProxyManager:
         Returns:
             Dict[str, str]: Proxy configuration for requests library
         """
-        proxy = next(self.proxy_pool)
-        return proxy.to_dict()
+        if self.residential:
+            proxy = next(self.proxy_pool)
+            return proxy.to_dict()
+        else:
+            proxy = next(self.proxy_pool)
+            return proxy.to_dict()
 
     def refresh_proxies(self) -> None:
         """Refresh the proxy pool with new proxies from the API."""

@@ -100,13 +100,15 @@ class BaseScraper(ABC):
     def _make_request(self, url: str, method: str = "GET", **kwargs) -> requests.Response:
         """Make HTTP request with rotating user agents and proxies"""
         headers = self._get_headers()
-        proxies = self.proxy_manager.get_proxy() if self.proxy_enabled else None
+        proxies = self.proxy_manager.get_next_proxy() if self.proxy_enabled else None
         
+        print("args: ", method, url, proxies,)
+
         try:
             response = requests.request(
                 method=method,
                 url=url,
-                headers=headers,
+                # headers=headers,
                 proxies=proxies,
                 **kwargs
             )
@@ -125,8 +127,8 @@ class BaseScraper(ABC):
         }
         
         if self.user_agent_enabled:
-            headers["User-Agent"] = self.user_agent_manager.get_next()
-            
+            headers["User-Agent"] = self.user_agent_manager.get_next_user_agent()
+        
         return headers
 
     @abstractmethod

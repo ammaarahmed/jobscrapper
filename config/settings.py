@@ -5,14 +5,21 @@ from typing import Optional
 import yaml
 
 @dataclass
-class ProxySettings:
-    api_url: str
+class ResidentialProxySettings:
+    url: str
     api_key: str
     api_secret: str
 
 @dataclass
+class MobileProxySettings:
+    username: str
+    password: str
+    port: int
+    host: str
+    url: str
+@dataclass
 class ScraperSettings:
-    request_timeout: int = 30
+    request_timeout: int = 10
     max_retries: int = 3
     user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     delay_between_requests: float = 2.0
@@ -22,6 +29,10 @@ class StorageSettings:
     output_format: str = "csv"
     output_directory: str = "data"
     filename_prefix: str = "jobs_"
+
+@dataclass
+class IndeedSettings:
+    api_key: str
 
 class Settings:
     def __init__(self, config_path: Optional[str] = None):
@@ -41,10 +52,18 @@ class Settings:
             config_data = yaml.safe_load(f)
         
         # Load proxy settings
-        self.proxy = ProxySettings(
-            api_url=config_data['API_URL'],
-            api_key=config_data['API_KEY'],
-            api_secret=config_data['API_SECRET']
+        self.residential_proxy = ResidentialProxySettings(
+            url=config_data['residential_proxy']['url'],
+            api_key=config_data['residential_proxy']['api_key'],
+            api_secret=config_data['residential_proxy']['api_secret']
+        )
+
+        self.mobile_proxy = MobileProxySettings(
+            username=config_data['mobile_proxy']['username'],
+            password=config_data['mobile_proxy']['password'],
+            port=config_data['mobile_proxy']['port'],
+            host=config_data['mobile_proxy']['host'],
+            url=config_data['mobile_proxy']['url']
         )
         
         # Load scraper settings with defaults
@@ -52,6 +71,11 @@ class Settings:
         
         # Load storage settings with defaults
         self.storage = StorageSettings()
+
+        # Load indeed settings with defaults
+        self.indeed = IndeedSettings(
+            api_key=config_data['indeed']['api_key']
+        )
     
     def reload(self) -> None:
         """Reload configuration from file."""

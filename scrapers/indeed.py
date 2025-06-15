@@ -7,8 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 from scrapers.base import BaseScraper
+from config.settings import settings
 from core.data_model import Job, SearchParams, SearchResult, Company
-from core.queries import JOB_SEARCH, API_HEADERS, JOB_TYPE_KEYS, REMOTE_KEYS
+from core.queries import INDEED_JOB_SEARCH, INDEED_API_HEADERS, INDEED_JOB_TYPE_KEYS, INDEED_REMOTE_KEYS
 
 class IndeedScraper(BaseScraper):
     def __init__(self, **kwargs):
@@ -16,13 +17,14 @@ class IndeedScraper(BaseScraper):
         self.base_url = "https://www.indeed.com"
         self.search_url = f"{self.base_url}/jobs"
         self.api_url = "https://apis.indeed.com/graphql"
+        self.params = params
 
     def search_jobs(self, params: SearchParams) -> SearchResult:
         """Search for jobs using the configured scraping method"""
         if self.scraping_method == "api":
-            return self._search_jobs_api(params)
+            return self._search_jobs_api(self.params)
         else:
-            return self._search_jobs_browser(params)
+            return self._search_jobs_browser(self.params)
 
     def _search_jobs_api(self, params: SearchParams) -> SearchResult:
         """Search jobs using Indeed's GraphQL API"""
@@ -34,14 +36,24 @@ class IndeedScraper(BaseScraper):
                 "cursor": params.cursor,
                 "filters": params.filters
             }
-
+            print("Kwargs: ",   
+                  { 
+                      "self.api_url": self.api_url,
+                      "method": "POST",
+                      "headers": INDEED_API_HEADERS, # TODO: move this to the base manager later 
+                      "json": {
+                          "query": INDEED_JOB_SEARCH,
+                          "variables": variables
+                      }
+                  })
+            
             # Make GraphQL request
             response = self._make_request(
                 self.api_url,
                 method="POST",
-                headers=API_HEADERS,
+                headers=INDEED_API_HEADERS, # TODO: move this to the base manager later 
                 json={
-                    "query": JOB_SEARCH,
+                    "query": INDEED_JOB_SEARCH,
                     "variables": variables
                 }
             )
@@ -139,7 +151,6 @@ class IndeedScraper(BaseScraper):
                 return f"From ${min_salary:,.2f}"
             elif max_salary:
                 return f"Up to ${max_salary:,.2f}"
-            
             return None
             
         except Exception:
@@ -264,3 +275,15 @@ class IndeedScraper(BaseScraper):
                 url_parts.append("sc=0kf%3Aattr(FSFW)%3B")
             
         return "&".join(url_parts)
+    
+
+if __name__ == "__main__":
+    scraper = IndeedScraper(
+        scraping_method="api",
+        headless=True,
+        proxy_enabled=True,
+        user_agent_enabled=True
+    )
+    params = SearchParams(what="software engineer", location="San Francisco, CA")
+    result = scraper.search_jobs(params)
+    print(result)
